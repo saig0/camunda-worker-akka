@@ -92,4 +92,10 @@ public class LockedTaskDto {
   public void setVariables(Map<String, Object> variables) {
     this.variables = variables;
   }
+
+  @Override
+  public String toString() {
+    return "LockedTaskDto [id=" + id + ", topicName=" + topicName + ", lockTime=" + lockTime + ", activityId=" + activityId + ", activityInstanceId="
+        + activityInstanceId + ", processInstanceId=" + processInstanceId + ", processDefinitionId=" + processDefinitionId + ", variables=" + variables + "]";
+  }
 }

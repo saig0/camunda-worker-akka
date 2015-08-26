@@ -30,4 +30,9 @@ public class LockedTasksResponseDto {
   public void setTasks(List<LockedTaskDto> tasks) {
     this.tasks = tasks;
   }
+
+  @Override
+  public String toString() {
+    return "LockedTasksResponseDto [tasks=" + tasks + "]";
+  }
 }

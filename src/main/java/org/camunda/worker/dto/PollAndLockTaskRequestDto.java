@@ -70,4 +70,10 @@ public class PollAndLockTaskRequestDto {
     this.consumerId = consumerId;
   }
 
+  @Override
+  public String toString() {
+    return "PollAndLockTaskRequestDto [topicName=" + topicName + ", variableNames=" + variableNames + ", maxTasks=" + maxTasks + ", lockTimeInSeconds="
+        + lockTimeInSeconds + ", consumerId=" + consumerId + "]";
+  }
+
 }
