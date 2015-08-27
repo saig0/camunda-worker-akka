@@ -7,8 +7,9 @@ package org.camunda.worker.akka
 import akka.actor.{Actor, ActorRef, ActorLogging, Props}
 import org.springframework.web.client.RestTemplate
 import org.camunda.worker.dto._
+import scala.math.{min, max, round}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.{seqAsJavaList, asScalaBuffer}
 
 import scala.concurrent._
 
@@ -19,19 +20,44 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
   
   val uri = s"$hostAddress/external-task/poll"
   
+  var currentWaitTime = waitTime;
+  val maxWaitTime = 30000;
+  
+  val factorEmptyResponse: Double = 1.5
+  val factorNonEmptyResponse: Double = 0.25
+  val factorFailure: Double = 2.5
+  
   def receive = {
     case poll @ Poll(topicName, worker, variableNames) => 
       log.info(s"start polling tasks on '$uri' with topic '$topicName'")
       
-      val response = pollTasks(topicName, getNameOfActor(worker), variableNames)
+      try {
+        val response = pollTasks(topicName, getNameOfActor(worker), variableNames)
+        
+        val taskCount = response.getTasks.size
+        log.info(s"polled tasks for topic '$topicName': $taskCount")
+        
+        if(taskCount == 0) {
+          currentWaitTime = min( toInt(currentWaitTime * factorEmptyResponse), maxWaitTime)
+        } else {
+          currentWaitTime = max( toInt(currentWaitTime * factorNonEmptyResponse), waitTime)
+        }
+         
+        val tasks = (List[LockedTaskDto]() ++ response.getTasks)
+        tasks.foreach( task => worker ! task )
       
-      val taskCount = response.getTasks.size
-      log.info(s"polled tasks for topic '$topicName': $taskCount")
-       
-      val tasks = (List[LockedTaskDto]() ++ response.getTasks)
-      tasks.foreach( task => worker ! task )
+      } catch {
+        case e: Exception => 
+          val errorMessage = e.getMessage
+          log.error(s"polling failed: $errorMessage")
+          
+          currentWaitTime = min( toInt(currentWaitTime * factorFailure), maxWaitTime)
+      }
       
-      Future { java.lang.Thread.sleep(waitTime) } onComplete  { _ => self ! poll}
+      Future { 
+        log.info(s"wait '$currentWaitTime' till next polling for '$topicName'")
+        java.lang.Thread.sleep(currentWaitTime)
+        } onComplete  { _ => self ! poll}
       
     case Complete(taskId, variables) => 
       
@@ -39,15 +65,29 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
       
       log.info(s"task '$taskId' completed by '$worker'")
       
-      completeTask(taskId, worker, variables)
+      try {
+        completeTask(taskId, worker, variables)
+      } catch {
+        case e: Exception => 
+          val errorMessage = e.getMessage
+          log.error(s"completing task failed: $errorMessage") 
+      }
       
     case FailedTask(taskId, errorMessage) =>
         
       val worker = getNameOfActor(sender)
       log.info(s"task '$taskId' failed by '$worker'")
       
-      failedTask(taskId, worker, errorMessage)
+      try {
+        failedTask(taskId, worker, errorMessage)
+      } catch {
+        case e: Exception => 
+          val errorMessage = e.getMessage
+          log.error(s"canceling task failed: $errorMessage") 
+      }
   }
+  
+  private def toInt(d: Double): Int = round(d.toFloat)
   
   private def getNameOfActor(actor: ActorRef) = {
     val name = actor.path.name

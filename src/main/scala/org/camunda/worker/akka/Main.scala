@@ -9,24 +9,31 @@ import org.camunda.worker.akka.PollActor.Poll
 import org.camunda.worker.dto.LockedTaskDto
 import akka.actor._
 import org.camunda.worker.akka.worker._
+import scala.io.StdIn._
 
 object Main extends App {
  
+  println("starting...........")
+  println("press ENTER to exit")
+  println("===================")
+  println("")
+  
   // create actor system
   val system = ActorSystem("MyActorSystem")
   
   // create worker
-  val worker = system.actorOf(UnreliableWorker.props(delay = 1000, reliability = 0.75), name = "worker-1")
-  val worker2 = system.actorOf(SimpleWorker.props(delay = 500), name = "worker-2")
+  val worker = system.actorOf(UnreliableWorker.props(delay = 200, reliability = 0.75), name = "worker-1")
+  val worker2 = system.actorOf(SimpleWorker.props(delay = 100), name = "worker-2")
   
   // start polling
-  val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 5000), name = "poller")
+  val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100), name = "poller")
   pollActor ! Poll(topicName = "reserveOrderItems", worker)
   pollActor ! Poll(topicName = "payment", worker2)
   
-  // TODO heart beat
-  
-  // waiting a bit and then exit
-  java.lang.Thread.sleep(15000)
+  // waiting for end
+  val input = readLine()
+  println("")
+  println("===================")
+  println("shutting down......")
   system.shutdown
 }
