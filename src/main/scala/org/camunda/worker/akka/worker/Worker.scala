@@ -18,7 +18,7 @@ trait Worker extends Actor with ActorLogging {
        sender ! Complete(task.getId)
       } catch {
         case e: Exception => {
-          log.error("failed task", e)
+          log.error("failed task: {}", e)
           
           sender ! FailedTask(task.getId, e.getMessage)
         }

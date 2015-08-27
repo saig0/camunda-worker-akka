@@ -49,7 +49,15 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
       failedTask(taskId, worker, errorMessage)
   }
   
-  private def getNameOfActor(actor: ActorRef) = actor.path.name
+  private def getNameOfActor(actor: ActorRef) = {
+    val name = actor.path.name
+    if(name.startsWith("$")) {
+      // in case of a worker of router
+      actor.path.parent.name
+    } else {
+      name
+    }
+  }
   
   private def pollTasks(topicName: String, consumerId: String, variableNames: List[String]): LockedTasksResponseDto = {
     
