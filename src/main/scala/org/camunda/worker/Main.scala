@@ -6,21 +6,23 @@ package org.camunda.worker/**
 
 import scala.collection.JavaConversions._
 import org.camunda.worker.dto.LockedTaskDto
+import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorRef, ActorLogging, Props}
 
 object Main extends App {
  
   println("started...........")
   
-  // TODO poll in loop
-  val tasks = new Poller("http://localhost:8080/engine-rest").poll("reserveOrderItems", "akka")
+  val system = ActorSystem("MyActorSystem")
   
-  println(s"receive $tasks")
+  val worker = system.actorOf(Props[SimpleWorker], name = "worker-1")
+  worker ! "init"
   
-  // TODO execute the tasks
-  tasks.getTasks.foreach( executeTask )
+  val poller = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest"), name = "poller")
+  poller ! PollActor.Poll(topicName = "reserveOrderItems", worker)
   
   
-  def executeTask(task: LockedTaskDto) {
-    println(s"execute $task")
-  }
+  // waiting a bit and then exit
+  java.lang.Thread.sleep(10000)
+  system.shutdown
 }
