@@ -14,5 +14,7 @@ class SimpleWorker extends Actor with ActorLogging {
   def receive = {
     case task: LockedTaskDto => 
       log.info(s"execute $task")
+      
+      
   }
 }

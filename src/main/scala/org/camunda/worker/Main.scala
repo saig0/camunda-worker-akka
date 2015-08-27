@@ -9,18 +9,23 @@ import org.camunda.worker.dto.LockedTaskDto
 import akka.actor.ActorSystem
 import akka.actor.{Actor, ActorRef, ActorLogging, Props}
 
+import org.camunda.worker.PollActor.Poll
+
 object Main extends App {
  
-  println("started...........")
-  
+  // create actor system
   val system = ActorSystem("MyActorSystem")
   
+  // create worker
   val worker = system.actorOf(Props[SimpleWorker], name = "worker-1")
-  worker ! "init"
+  val worker2 = system.actorOf(Props[SimpleWorker], name = "worker-2")
   
-  val poller = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest"), name = "poller")
-  poller ! PollActor.Poll(topicName = "reserveOrderItems", worker)
+  // start polling
+  val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest"), name = "poller")
+  pollActor ! Poll(topicName = "reserveOrderItems", worker)
+  pollActor ! Poll(topicName = "payment", worker2)
   
+  // TODO heart beat
   
   // waiting a bit and then exit
   java.lang.Thread.sleep(10000)
