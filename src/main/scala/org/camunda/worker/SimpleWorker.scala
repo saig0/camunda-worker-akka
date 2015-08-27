@@ -5,16 +5,16 @@ package org.camunda.worker
  */
 
 import akka.actor.{Actor, ActorLogging, Props}
-import org.camunda.worker.dto.LockedTaskDto
+import org.camunda.worker.dto._
+import org.camunda.worker.PollActor._
 
-class SimpleWorker extends Actor with ActorLogging {
+class SimpleWorker extends Worker {
   
-  import context._
-  
-  def receive = {
-    case task: LockedTaskDto => 
-      log.info(s"execute $task")
-      
-      
+  def work(task: LockedTaskDto) {
+    
+    // simulate working
+    java.lang.Thread.sleep(100)
+    
   }
+  
 }

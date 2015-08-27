@@ -6,9 +6,7 @@ package org.camunda.worker
 
 import akka.actor.{Actor, ActorRef, ActorLogging, Props}
 import org.springframework.web.client.RestTemplate
-import org.camunda.worker.dto.PollAndLockTaskRequestDto
-import org.camunda.worker.dto.LockedTasksResponseDto
-import org.camunda.worker.dto.LockedTaskDto
+import org.camunda.worker.dto._
 
 import scala.collection.JavaConversions._
 
@@ -25,7 +23,7 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
     case poll @ Poll(topicName, worker, variableNames) => 
       log.info(s"start polling tasks on '$uri' with topic '$topicName'")
       
-      val response = pollTasks(topicName, "akka", variableNames)
+      val response = pollTasks(topicName, getNameOfActor(worker), variableNames)
       
       val taskCount = response.getTasks.size
       log.info(s"polled tasks for topic '$topicName': $taskCount")
@@ -34,7 +32,17 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
       tasks.foreach( task => worker ! task )
       
       Future { java.lang.Thread.sleep(waitTime) } onComplete  { _ => self ! poll}
+      
+    case Complete(taskId, variables) => 
+      
+      val worker = getNameOfActor(sender)
+      
+      log.info(s"task '$taskId' completed by '$worker'")
+      
+      completeTask(taskId, worker, variables)
   }
+  
+  private def getNameOfActor(actor: ActorRef) = actor.path.name
   
   private def pollTasks(topicName: String, consumerId: String, variableNames: List[String]): LockedTasksResponseDto = {
     
@@ -52,6 +60,18 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
     template.postForObject(uri, request, classOf[LockedTasksResponseDto])
   }
   
+  private def completeTask(taskId: String, consumerId: String, variables: Map[String, Any]) {
+    // TODO use scala objects + json mapping
+    
+    val template = new RestTemplate()
+    
+    val request = new CompleteTaskRequestDto()
+    request.setConsumerId(consumerId)
+    // request.setVariables(variables)
+    
+    template.postForObject(s"$hostAddress/external-task/$taskId/complete", request, classOf[Any])
+  }
+  
 }
 
 object PollActor {
@@ -60,4 +80,7 @@ object PollActor {
     Props(new PollActor(hostAddress, maxTasks, lockTime, waitTime))
   
   case class Poll(topicName: String, worker: ActorRef, variableNames: List[String] = List())
+  
+  case class Complete(taskId: String, variables: Map[String, Any] = Map())
+  
 }
