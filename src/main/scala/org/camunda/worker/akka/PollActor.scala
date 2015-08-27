@@ -1,4 +1,4 @@
-package org.camunda.worker
+package org.camunda.worker.akka
 
 /**
  * @author Philipp Ossler
@@ -40,6 +40,13 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
       log.info(s"task '$taskId' completed by '$worker'")
       
       completeTask(taskId, worker, variables)
+      
+    case FailedTask(taskId, errorMessage) =>
+        
+      val worker = getNameOfActor(sender)
+      log.info(s"task '$taskId' failed by '$worker'")
+      
+      failedTask(taskId, worker, errorMessage)
   }
   
   private def getNameOfActor(actor: ActorRef) = actor.path.name
@@ -72,6 +79,18 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
     template.postForObject(s"$hostAddress/external-task/$taskId/complete", request, classOf[Any])
   }
   
+  private def failedTask(taskId: String, consumerId: String, errorMessage: String) {
+    // TODO use scala objects + json mapping
+    
+    val template = new RestTemplate()
+    
+    val request = new FailedTaskRequestDto
+    request.setConsumerId(consumerId)
+    request.setErrorMessage(errorMessage)
+    
+    template.postForObject(s"$hostAddress/external-task/$taskId/failed", request, classOf[Any])
+  }
+  
 }
 
 object PollActor {
@@ -82,5 +101,6 @@ object PollActor {
   case class Poll(topicName: String, worker: ActorRef, variableNames: List[String] = List())
   
   case class Complete(taskId: String, variables: Map[String, Any] = Map())
-  
+
+  case class FailedTask(taskId: String, errorMessage: String)
 }

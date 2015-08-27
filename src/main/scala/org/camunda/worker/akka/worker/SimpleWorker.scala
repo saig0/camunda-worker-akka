@@ -1,12 +1,7 @@
-package org.camunda.worker
+package org.camunda.worker.akka.worker
 
-/**
- * @author Philipp Ossler
- */
-
-import akka.actor.{Actor, ActorLogging, Props}
 import org.camunda.worker.dto._
-import org.camunda.worker.PollActor._
+import org.camunda.worker.akka.PollActor._
 
 class SimpleWorker extends Worker {
   

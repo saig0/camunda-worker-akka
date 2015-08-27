@@ -1,4 +1,4 @@
-package org.camunda.worker
+package org.camunda.worker.akka
 
 /**
  * @author Philipp Ossler
