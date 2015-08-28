@@ -1,16 +1,16 @@
 
 
-package org.camunda.worker.akka/**
- * @author Philipp Ossler
- */
+package org.camunda.worker.akka
 
 import scala.collection.JavaConversions._
-import org.camunda.worker.akka.PollActor.Poll
-import org.camunda.worker.dto.LockedTaskDto
 import akka.actor._
 import org.camunda.worker.akka.worker._
 import scala.io.StdIn._
 
+/**
+ * @author Philipp Ossler
+ */
+// example app as template
 object Main extends App {
  
   println("starting...........")
@@ -27,7 +27,6 @@ object Main extends App {
   val worker3 = system.actorOf(SimpleWorker.props(delay = 100), name = "worker-3")
   
   // start polling
-  // 192.168.88.216:8080
   val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600), name = "poller")
   pollActor ! Poll(topicName = "reserveOrderItems", worker)
   pollActor ! Poll(topicName = "payment", worker2)
