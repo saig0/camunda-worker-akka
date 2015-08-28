@@ -8,22 +8,40 @@ Implement workers for external tasks in [Camunda BPM](http://camunda.org) in Sca
 
 ## Summary
 
-This tool provides a Scala interface to external tasks exposed by the process engine.
+This tool provides a Scala template to external tasks exposed by the process engine.
+You can build a scala worker based on the template.
 
 ## Getting started
 
 > Requirements
-* [SBT](http://www.scala-sbt.org) to run and build the application 
+* [SBT](http://www.scala-sbt.org) to build the application 
 
-Run application with
-```
-sbt run
-```
-
-Build application with
+Build the application with
 ```
 sbt assemply
 ```
 
-The running application can shut down by press ENTER.
+Deploy the application with
+```
+sbt pulishLocal
+```
 
+See example of using the akka worker in [Order Processing Microservices example](https://github.com/meyerdan/order-processing-microservices/tree/master/payment).
+
+## Using the template
+
+```scala
+object Main extends App {
+ 
+  // create actor system
+  val system = ActorSystem("MyActorSystem")
+  
+  // create worker
+  val worker = system.actorOf(UnreliableWorker.props(delay = 200, reliability = 0.75), name = "worker-1")
+  
+  // start polling
+  val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600), name = "poller")
+  pollActor ! Poll(topicName = "payment", worker)
+  
+}
+```
