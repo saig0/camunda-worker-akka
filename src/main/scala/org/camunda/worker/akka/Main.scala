@@ -27,7 +27,8 @@ object Main extends App {
   val worker3 = system.actorOf(SimpleWorker.props(delay = 100), name = "worker-3")
   
   // start polling
-  val pollActor = system.actorOf(PollActor.props(hostAddress = "http://192.168.88.216:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600), name = "poller")
+  // 192.168.88.216:8080
+  val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600), name = "poller")
   pollActor ! Poll(topicName = "reserveOrderItems", worker)
   pollActor ! Poll(topicName = "payment", worker2)
   pollActor ! Poll(topicName = "shipment", worker3)
