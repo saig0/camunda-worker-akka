@@ -30,6 +30,7 @@ See example of using the akka worker in [Order Processing Microservices example]
 
 ## Using the template
 
+Write a launch class:
 ```scala
 object Main extends App {
  
@@ -37,11 +38,21 @@ object Main extends App {
   val system = ActorSystem("MyActorSystem")
   
   // create worker
-  val worker = system.actorOf(UnreliableWorker.props(delay = 200, reliability = 0.75), name = "worker-1")
+  val worker = system.actorOf(Props[PaymentWorker], name = "worker-1")
   
   // start polling
   val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600), name = "poller")
   pollActor ! Poll(topicName = "payment", worker)
   
+}
+```
+
+Write a worker:
+```scala
+class PaymentWorker extends Worker {
+  
+  def work(task: LockedTaskDto) {
+    // working...
+  }
 }
 ```
