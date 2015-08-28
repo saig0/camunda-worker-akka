@@ -22,38 +22,20 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
   val uri = s"$hostAddress/external-task/poll"
     
   def receive = {
-    case poll @ Poll(topicName, worker, variableNames, lastWaitTime) => 
+    case poll @ Poll(topicName, worker, variableNames, strategy) => 
       log.info(s"start polling tasks on '$uri' with topic '$topicName'")
       
-      var currentWaitTime = if(lastWaitTime != 0) lastWaitTime else waitTime
-      
-      try {
-        val response = pollTasks(topicName, getNameOfActor(worker), variableNames)
-        
+      strategy.poll(topicName, () => {
+        pollTasks(topicName, getNameOfActor(worker), variableNames)
+      }, response => {
         val taskCount = response.getTasks.size
         log.info(s"polled tasks for topic '$topicName': $taskCount")
         
-        if(taskCount == 0) {
-          currentWaitTime = min( toInt(currentWaitTime * factorEmptyResponse), maxWaitTime)
-        } else {
-          currentWaitTime = max( toInt(currentWaitTime * factorNonEmptyResponse), waitTime)
-        }
-         
         val tasks = (List[LockedTaskDto]() ++ response.getTasks)
         tasks.foreach( task => worker ! task )
-      
-      } catch {
-        case e: Exception => 
-          val errorMessage = e.getMessage
-          log.error(s"polling failed: $errorMessage")
-          
-          currentWaitTime = min( toInt(currentWaitTime * factorFailure), maxWaitTime)
-      }
-      
-      Future { 
-        log.info(s"wait '$currentWaitTime' till next polling for '$topicName'")
-        java.lang.Thread.sleep(currentWaitTime)
-        } onComplete  { _ => self ! Poll(topicName, worker, variableNames, currentWaitTime)}
+      }, () => {
+        self ! Poll(topicName, worker, variableNames, strategy)
+      })
       
     case Complete(taskId, variables) => 
       
@@ -142,15 +124,9 @@ object PollActor {
   def props(hostAddress: String, maxTasks: Int = 1, lockTime: Int = 60, waitTime: Int = 3000): Props = 
     Props(new PollActor(hostAddress, maxTasks, lockTime, waitTime))
   
-  case class Poll(topicName: String, worker: ActorRef, variableNames: List[String] = List(), currentWaitTime: Int = 0)
+  case class Poll(topicName: String, worker: ActorRef, variableNames: List[String] = List(), strategy: PollStrategy = new PollStrategy())
   
   case class Complete(taskId: String, variables: Map[String, Any] = Map())
 
   case class FailedTask(taskId: String, errorMessage: String)
-  
-  val maxWaitTime = 30000;
-  
-  val factorEmptyResponse: Double = 1.5
-  val factorNonEmptyResponse: Double = 0.25
-  val factorFailure: Double = 2.5
 }
