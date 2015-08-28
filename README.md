@@ -12,10 +12,18 @@ This tool provides a Scala interface to external tasks exposed by the process en
 
 ## Getting started
 
-Requires SBT to build. 
+> Requirements
+* [SBT](http://www.scala-sbt.org) to run and build the application 
 
+Run application with
 ```
 sbt run
 ```
 
+Build application with
+```
+sbt assemply
+```
+
+The running application can shut down by press ENTER.
 
