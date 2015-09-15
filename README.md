@@ -20,6 +20,8 @@ Run application with
 sbt run
 ```
 
+(local test with : sbt "test:runMain org.camunda.worker.akka.Main")
+
 Build application with
 ```
 sbt assemply

@@ -10,9 +10,9 @@ import org.camunda.worker.dto._
 import scala.math.{min, max, round}
 
 import scala.collection.JavaConversions.{seqAsJavaList, asScalaBuffer}
-
 import scala.concurrent._
-
+import org.camunda.worker.akka.client.CamundaClientActor.{PollRequest, TaskCompleted, TaskFailed}
+import org.camunda.worker.akka.client.LockedTask
 
 class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int) extends Actor with ActorLogging {
   
@@ -129,4 +129,8 @@ object PollActor {
   case class Complete(taskId: String, variables: Map[String, Any] = Map())
 
   case class FailedTask(taskId: String, errorMessage: String)
+  
+  case class LockedTasks(tasks: List[LockedTask])
+  
+  case class FailedToPollTasks(cause: Throwable)
 }

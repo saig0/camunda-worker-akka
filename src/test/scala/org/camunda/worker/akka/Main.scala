@@ -1,11 +1,10 @@
-
-
 package org.camunda.worker.akka
 
 import scala.collection.JavaConversions._
 import akka.actor._
 import org.camunda.worker.akka.worker._
 import scala.io.StdIn._
+import org.camunda.worker.akka.PollActor.Poll
 
 /**
  * @author Philipp Ossler
