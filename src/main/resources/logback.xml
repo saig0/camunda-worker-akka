@@ -16,7 +16,7 @@
 
   <!-- <logger name="ui"> <appender-ref ref="STDOUT" /> </logger> -->
 
-  <logger name="org.camunda" level="DEBUG" />
+  <logger name="org.camunda" level="INFO" />
 
   <root level="WARN" >
     <appender-ref ref="STDOUT" />

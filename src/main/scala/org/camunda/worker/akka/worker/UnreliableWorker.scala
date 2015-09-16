@@ -1,26 +1,29 @@
 package org.camunda.worker.akka.worker
 
-/**
- * @author Philipp Ossler
- */
-
 import org.camunda.worker.akka.client.LockedTask
 import scala.util.Random
 import akka.routing._
 import akka.actor.Props
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import org.camunda.worker.akka.client.VariableValue
+
 
 class UnreliableWorker(delay: Int, reliability: Double) extends Worker {
 
-  def work(task: LockedTask) {
+  def work(task: LockedTask): Future[Map[String, VariableValue]] = {
     
-    // simulate working
-    java.lang.Thread.sleep(delay)
-    
-    val failing = Random.nextDouble() > reliability
-    if(failing) {
-      throw new RuntimeException("unreliable task")
+    Future {
+      // simulate working
+      java.lang.Thread.sleep(delay)
+      
+      val failing = Random.nextDouble() > reliability
+      if(failing) {
+        throw new RuntimeException("unreliable task")
+      } else {
+        Map()
+      }
     }
-    
   }
   
 }

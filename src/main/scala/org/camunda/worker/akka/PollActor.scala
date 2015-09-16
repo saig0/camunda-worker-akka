@@ -36,65 +36,64 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
     
   val clientActor = context.actorOf(CamundaClientActor.props(hostAddress), name = "client")
   
-  implicit val timeout = Timeout(10 seconds)
+  // timeout for client actor
+  implicit val timeout = Timeout(5000 millis)
   
   def receive = {
     case poll @ Poll(topicName, worker, variableNames, strategy) => {
-      log.info(s"poll tasks from server '$hostAddress' with topic '$topicName'")
+      log.debug(s"poll tasks from server '$hostAddress' with topic '$topicName'")
       
+      // poll tasks from server
       val result = clientActor ? PollRequest(request = PollAndLockTaskRequest(topicName, "demo", lockTime, maxTasks, variableNames))
       result onComplete {
-        case Success(LockedTasks(tasks))  => {
-                                                if(!tasks.isEmpty) {
-                                                  log.debug(s"shedule '${tasks.size}' tasks for topic '${topicName}'")
-                                                  tasks.foreach( task => worker ! task )
-                                                } else {
-                                                  log.debug(s"no tasks polled for topic '${topicName}'")
-                                                  // wait more time
-                                                }
-                                                // set wait time
-                                                system.scheduler.scheduleOnce(1000 millis, self, poll)
-                                              }
+        case Success(LockedTasks(tasks))        => {
+                                                    if(!tasks.isEmpty) {
+                                                      log.info(s"shedule '${tasks.size}' tasks for topic '$topicName'")
+                                                      // assigne tasks to worker
+                                                      tasks.foreach( task => worker ! task )
+                                                      // calculate wait time
+                                                      strategy.polledTasks
+                                                    } else {
+                                                      log.debug(s"no tasks polled for topic '$topicName'")
+                                                      // calculate wait time
+                                                      strategy.noPolledTasks
+                                                    }
+                                                    log.debug(s"wait '${strategy.waitTime}ms' till poll for topic '$topicName'")
+                                                    // schedule next poll request 
+                                                    system.scheduler.scheduleOnce(strategy.waitTime, self, poll)
+                                                   }
         case Success(FailedToPollTasks(cause))  => {
-                                                     log.error(cause,"poll failed") // wait
-                                                     system.scheduler.scheduleOnce(5000 millis, self, poll)
+                                                     log.error(cause,s"failed to poll tasks for topic '$topicName'")
+                                                     // calculate wait time
+                                                     strategy.failedToPollTasks
+                                                     // schedule next poll request 
+                                                     system.scheduler.scheduleOnce(strategy.waitTime, self, poll)
                                                    }
-        case Success(result)                    => log.warning(s"unknown result: ${result}")
+        case Success(result)                    =>   log.warning(s"unknown result from client actor: $result")
         case Failure(cause)                     => {
-                                                     log.error(cause,"failure while poll") // wait
-                                                     system.scheduler.scheduleOnce(10000 millis, self, poll)
-                                                   }
+                                                     log.error(cause,s"failed to poll tasks for topic '$topicName'")
+                                                     // calculate wait time
+                                                     strategy.failedToPollTasks
+                                                     // schedule next poll request 
+                                                     system.scheduler.scheduleOnce(strategy.waitTime, self, poll)
+                                                    }
       }
     }
     
-    case Complete(taskId, variables) => {
-      
-      val worker = getNameOfActor(sender)      
-      log.info(s"task '$taskId' completed by '$worker'")
-      
-      clientActor ! TaskCompleted(taskId, CompleteTaskRequest(consumerId = "demo", variables))
+    case Complete(consumerId, taskId, variables) => {
+      log.info(s"task '$taskId' completed by '$consumerId'")
+      // notify server that task is completed
+      clientActor ! TaskCompleted(taskId, CompleteTaskRequest("demo", variables))
     }      
       
-    case FailedTask(taskId, errorMessage) => {
-        
-      val worker = getNameOfActor(sender)
-      log.info(s"task '$taskId' failed by '$worker'")
-      
-      clientActor ! TaskFailed(taskId, FailedTaskRequest(consumerId = "demo", errorMessage))
+    case FailedTask(consumerId, taskId, errorMessage) => {
+      log.info(s"task '$taskId' failed by '$consumerId'")
+      // notify server that task is failed
+      clientActor ! TaskFailed(taskId, FailedTaskRequest("demo", errorMessage))
     }
   }
   
   private def toInt(d: Double): Int = round(d.toFloat)
-  
-  private def getNameOfActor(actor: ActorRef) = {
-    val name = actor.path.name
-    if(name.startsWith("$")) {
-      // in case of a worker of router
-      actor.path.parent.name
-    } else {
-      name
-    }
-  }
   
 }
 
@@ -103,11 +102,11 @@ object PollActor {
   def props(hostAddress: String, maxTasks: Int = 1, lockTime: Int = 60, waitTime: Int = 3000): Props = 
     Props(new PollActor(hostAddress, maxTasks, lockTime, waitTime))
   
-  case class Poll(topicName: String, worker: ActorRef, variableNames: List[String] = List(), strategy: PollStrategy = new PollStrategy())
+  case class Poll(topicName: String, worker: ActorRef, variableNames: List[String] = List(), strategy: PollBackOffStrategy = new PollBackOffStrategy())
   
-  case class Complete(taskId: String, variables: Map[String, VariableValue] = Map())
+  case class Complete(consumerId: String, taskId: String, variables: Map[String, VariableValue] = Map())
 
-  case class FailedTask(taskId: String, errorMessage: String)
+  case class FailedTask(consumerId: String, taskId: String, errorMessage: String)
   
   case class LockedTasks(tasks: List[LockedTask])
   
