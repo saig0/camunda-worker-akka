@@ -1,14 +1,14 @@
-package org.camunda.worker.akka.worker
+package org.camunda.worker.akka
 
 import org.camunda.worker.akka.PollActor._
-import java.lang.Exception
-import akka.actor.{Actor, ActorRef, ActorLogging, Props}
+import akka.actor.{Actor, ActorRef, ActorLogging}
 import org.camunda.worker.akka.client.LockedTask
 import org.camunda.worker.akka.client.VariableValue
 import scala.concurrent.Future
 import scala.util.{Success, Failure}
 import scala.concurrent._
 import ExecutionContext.Implicits.global
+import akka.actor.actorRef2Scala
 
 /**
  * Worker that can scheduled by PollActor.

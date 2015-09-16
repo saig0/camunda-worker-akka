@@ -7,6 +7,8 @@ import akka.actor.Props
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import org.camunda.worker.akka.client.VariableValue
+import org.camunda.worker.akka.client.VariableValue.anyToVariableValue
+import org.camunda.worker.akka.Worker
 
 class SimpleWorker(delay: Int) extends Worker {
   

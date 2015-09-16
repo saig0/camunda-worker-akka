@@ -8,6 +8,8 @@ import org.camunda.worker.akka.PollActor.Poll
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import org.camunda.worker.akka.worker.SimpleWorker
+import org.camunda.worker.akka.worker.UnreliableWorker
 
 /**
  * @author Philipp Ossler

@@ -1,9 +1,14 @@
-package org.camunda.worker.akka.client
+package org.camunda.worker.akka
 
 import akka.actor.{Actor, ActorLogging, Props}
 import scala.util.{Success, Failure}
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.camunda.worker.akka.PollActor.{FailedToPollTasks, LockedTasks}
+import akka.actor.actorRef2Scala
+import org.camunda.worker.akka.client.CamundaClient
+import org.camunda.worker.akka.client.CompleteTaskRequest
+import org.camunda.worker.akka.client.FailedTaskRequest
+import org.camunda.worker.akka.client.PollAndLockTaskRequest
 
 /**
  * Actor what call the camunda Rest Client and handle the response.

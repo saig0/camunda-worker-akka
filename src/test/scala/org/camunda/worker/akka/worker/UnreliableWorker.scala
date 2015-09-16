@@ -7,6 +7,7 @@ import akka.actor.Props
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import org.camunda.worker.akka.client.VariableValue
+import org.camunda.worker.akka.Worker
 
 
 class UnreliableWorker(delay: Int, reliability: Double) extends Worker {

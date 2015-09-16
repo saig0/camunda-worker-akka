@@ -6,10 +6,8 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.util.{ Success, Failure }
-
-import org.camunda.worker.akka.client.CamundaClientActor.{ PollRequest, TaskCompleted, TaskFailed }
+import org.camunda.worker.akka.CamundaClientActor.{ PollRequest, TaskCompleted, TaskFailed }
 import org.camunda.worker.akka.client._
-import org.camunda.worker.akka.worker.Worker
 
 /**
  * Coordinate polling of tasks.
