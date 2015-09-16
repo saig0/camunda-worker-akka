@@ -5,5 +5,5 @@ package org.camunda.worker.akka.client
  */
 case class CompleteTaskRequest(
   consumerId: String,
-  variables: Map[String,Object] = Map()
+  variables: Map[String,VariableValue] = Map()
 )

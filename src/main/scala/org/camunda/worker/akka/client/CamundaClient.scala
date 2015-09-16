@@ -5,6 +5,7 @@ import dispatch.Defaults._
 import net.liftweb.json._
 import net.liftweb.json.Serialization._
 import com.ning.http.client.RequestBuilder
+import java.text.SimpleDateFormat
 
 /**
  * Rest Client for camunda BPM Server.
@@ -14,30 +15,33 @@ import com.ning.http.client.RequestBuilder
 class CamundaClient(hostAdress: String) {
   
   // using defaults for json serialization
-  private implicit val formats = DefaultFormats
+  implicit val formats = new DefaultFormats {
+      // change date format to parse response format
+      override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+    }
   
   val jsonHeader = Map("Content-Type" -> "application/json")
   
-  val url = host(hostAdress) / "external-task"
+  val externalTaskUri = url(hostAdress) / "external-task"
   
   def pollTasks(pollRequest: PollAndLockTaskRequest): Future[LockedTasksResponse] = {
     val json: String = write(pollRequest)    
-    val request = jsonRequest(url / "poll" POST, json)
+    val request = jsonRequest(externalTaskUri / "poll" POST, json)
     
     handleRequest(request, json => 
       parse(json).extract[LockedTasksResponse])
   }
   
-  def taskCompleted(taskId: Int, completedRequest: CompleteTaskRequest): Future[Unit] =  {
+  def taskCompleted(taskId: String, completedRequest: CompleteTaskRequest): Future[Unit] =  {
     val json: String = write(completedRequest)
-    val request = jsonRequest(url / taskId / "complete" POST, json)
+    val request = jsonRequest(externalTaskUri / taskId / "complete" POST, json)
     
     handleRequest(request, _ => ())
   }
   
-  def taskFailed(taskId: Int, failedRequest: FailedTaskRequest): Future[Unit] = {
+  def taskFailed(taskId: String, failedRequest: FailedTaskRequest): Future[Unit] = {
     val json: String = write(failedRequest)
-    val request = jsonRequest(url / taskId / "failed" POST, json)
+    val request = jsonRequest(externalTaskUri / taskId / "failed" POST, json)
     
     handleRequest(request, _ => ())
   }

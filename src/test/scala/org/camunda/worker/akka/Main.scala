@@ -5,6 +5,9 @@ import akka.actor._
 import org.camunda.worker.akka.worker._
 import scala.io.StdIn._
 import org.camunda.worker.akka.PollActor.Poll
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 /**
  * @author Philipp Ossler
@@ -36,5 +39,10 @@ object Main extends App {
   println("")
   println("===================")
   println("shutting down......")
+  
   system.shutdown
+  system.awaitTermination()
+  println("done")
+  
+  System.exit(0)
 }

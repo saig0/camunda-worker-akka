@@ -17,7 +17,8 @@ libraryDependencies ++= Seq(
 libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-json" % "2.6.2",
   "net.liftweb" %% "lift-json-ext" % "2.6.2",
-  "net.databinder.dispatch" %% "dispatch-core" % "0.11.3"
+  "net.databinder.dispatch" %% "dispatch-core" % "0.11.3",
+  "com.github.nscala-time" %% "nscala-time" % "2.2.0"
 )
 
 libraryDependencies += "org.springframework" % "spring-context" % "4.2.0.RELEASE"

@@ -18,14 +18,15 @@ class CamundaClientActor(hostAddress: String) extends Actor with ActorLogging {
   
   def receive = {
     case PollRequest(request)            => {
+      val requestActor = sender
       client.pollTasks(request) onComplete {
           case Success(response) => {
                                       log.debug(s"polled '${response.tasks.size}' tasks from server for topic '${request.topicName}'")
-                                      sender ! LockedTasks(response.tasks)
+                                      requestActor ! LockedTasks(response.tasks)
                                     }
           case Failure(t)        => {
                                       log.error(t, s"failed to poll tasks from server for topic '${request.topicName}'")
-                                      sender ! FailedToPollTasks(t)
+                                      requestActor ! FailedToPollTasks(t)
                                      }
       }
     }
@@ -51,8 +52,8 @@ object CamundaClientActor {
   
   case class PollRequest(request: PollAndLockTaskRequest)
   
-  case class TaskCompleted(taskId: Int, request: CompleteTaskRequest)
+  case class TaskCompleted(taskId: String, request: CompleteTaskRequest)
   
-  case class TaskFailed(taskId: Int, request: FailedTaskRequest)
+  case class TaskFailed(taskId: String, request: FailedTaskRequest)
     
 }

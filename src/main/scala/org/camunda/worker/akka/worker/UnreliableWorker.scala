@@ -4,14 +4,14 @@ package org.camunda.worker.akka.worker
  * @author Philipp Ossler
  */
 
-import org.camunda.worker.dto._
+import org.camunda.worker.akka.client.LockedTask
 import scala.util.Random
 import akka.routing._
 import akka.actor.Props
 
 class UnreliableWorker(delay: Int, reliability: Double) extends Worker {
 
-  def work(task: LockedTaskDto) {
+  def work(task: LockedTask) {
     
     // simulate working
     java.lang.Thread.sleep(delay)
