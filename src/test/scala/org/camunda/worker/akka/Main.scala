@@ -33,7 +33,7 @@ object Main extends App {
   // start polling
   val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600), name = "poller")
   pollActor ! Poll(topicName = "reserveOrderItems", worker)
-  pollActor ! Poll(topicName = "payment", worker2)
+  pollActor ! Poll(topicName = "payment", worker2, variableNames = List("var"))
   pollActor ! Poll(topicName = "shipment", worker3)
   
   // waiting for end

@@ -9,7 +9,11 @@ case class VariableValue(
   valueInfo: Map[String, Any] = Map()
 ) {
   
-  def toValue[T]: T = {
+  // Boolean
+  // Short
+  // Date
+  // no Float
+  def asValue[T]: T = {
     val typedValue = `type` match {
       case "Null"    => None
       case "String"  => value

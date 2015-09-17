@@ -47,8 +47,8 @@ object Main extends App {
   val worker = system.actorOf(Props[PaymentWorker], name = "payment-worker")
   
   // start polling
-  val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600), name = "poller")
-  pollActor ! Poll(topicName = "payment", worker)
+  val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600))
+  pollActor ! Poll(topicName = "payment", worker, variableNames = List("orderId")
   
 }
 ```
@@ -57,9 +57,15 @@ Write a worker:
 ```scala
 class PaymentWorker extends Worker {
 
-  def work(task: LockedTask): Future[Map[String, VariableValue]] = Future {
+  def work(task: LockedTask): Future[Map[String, VariableValue]] = {
+    // resolve variables from process instance
+    val orderId = task.variables.get("orderId") match {
+      case Some(variableValue)  => variableValue.asValue[String]
+      case None                 => throw IllegalArgumentException("no order id available")
+    }
+  
     // do the work
-    val payment = calculatePayment
+    val payment = calculatePayment(orderId)
     // return the result which will set as variable of the process instance
     Map("payment" -> payment)
   }
