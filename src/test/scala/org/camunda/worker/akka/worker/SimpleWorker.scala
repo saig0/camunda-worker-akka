@@ -5,7 +5,6 @@ import org.camunda.worker.akka.PollActor._
 import akka.routing._
 import akka.actor.Props
 import org.camunda.worker.akka.client.VariableValue
-import org.camunda.worker.akka.client.VariableValue.anyToVariableValue
 import org.camunda.worker.akka.Worker
 
 class SimpleWorker(delay: Int) extends Worker {
@@ -13,7 +12,7 @@ class SimpleWorker(delay: Int) extends Worker {
   def work(task: LockedTask): Map[String, VariableValue] = {
     
     val variableName = task.variables.get("var") match {
-      case Some(variableValue)  => variableValue.toValue[String]
+      case Some(variableValue)  => variableValue.asValue[String]
       case None                 => "test"
     }
     

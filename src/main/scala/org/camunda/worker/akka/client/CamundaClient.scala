@@ -5,7 +5,7 @@ import dispatch.Defaults._
 import net.liftweb.json._
 import net.liftweb.json.Serialization._
 import com.ning.http.client.RequestBuilder
-import java.text.SimpleDateFormat
+import org.camunda.worker.akka.DateFormat
 
 /**
  * Rest Client for camunda BPM Server.
@@ -17,7 +17,7 @@ class CamundaClient(hostAdress: String) {
   // using defaults for json serialization
   implicit val formats = new DefaultFormats {
       // change date format to parse response format
-      override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+      override def dateFormatter = DateFormat.format
     }
   
   val jsonHeader = Map("Content-Type" -> "application/json")
