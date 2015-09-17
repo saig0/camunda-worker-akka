@@ -48,7 +48,7 @@ object Main extends App {
   
   // start polling
   val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600))
-  pollActor ! Poll(topicName = "payment", worker, variableNames = List("orderId"))
+  pollActor ! Poll(topicName = "payment", worker, variableNames = List("order"))
   
 }
 ```
@@ -59,9 +59,9 @@ class PaymentWorker extends Worker {
 
   def work(task: LockedTask): Map[String, VariableValue] = {
     // resolve variables from process instance
-    val orderId = task.variables.get("orderId") match {
-      case Some(variableValue)  => variableValue.asValue[String]
-      case None                 => throw new IllegalArgumentException("no order id available")
+    val orderId: String = task.variable[JValue]("order") match {
+      case Some(json) => (json \ "orderId").extract[String]
+      case None       => throw new IllegalArgumentException("order is not available")
     }
   
     // do the work

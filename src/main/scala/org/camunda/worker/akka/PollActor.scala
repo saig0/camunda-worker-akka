@@ -48,7 +48,7 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
 
     case FailedTask(consumerId, taskId, errorMessage) => {
 
-      log.info(s"task '$taskId' failed by '$consumerId'")
+      log.info(s"task '$taskId' failed by '$consumerId': $errorMessage")
       // notify the server that task is failed
       clientActor ! TaskFailed(taskId, FailedTaskRequest(consumerId, errorMessage))
     }

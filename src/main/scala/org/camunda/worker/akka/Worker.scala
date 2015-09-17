@@ -22,19 +22,22 @@ trait Worker extends Actor with ActorLogging {
     case task: LockedTask =>
 
       log.debug(s"execute task '$task'")
-      
+
       try {
         // execute the task
         val result = work(task)
         sender ! Complete(consumerId, task.id, result)
       } catch {
-        case cause: Exception => sender ! FailedTask(consumerId, task.id, cause.getMessage)
+        case cause: Exception => {
+          log.error(cause, "failed to execute task $taskId")
+          sender ! FailedTask(consumerId, task.id, cause.getMessage)
+        }
       }
   }
 
   // should implement by the concrete worker
   def work(task: LockedTask): Map[String, VariableValue]
-
+  
 }
 
 object Worker {

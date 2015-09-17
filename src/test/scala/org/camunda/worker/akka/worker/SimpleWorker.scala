@@ -11,11 +11,7 @@ class SimpleWorker(delay: Int) extends Worker {
 
   def work(task: LockedTask): Map[String, VariableValue] = {
     
-    val variableName = task.variables.get("var") match {
-      case Some(variableValue)  => variableValue.asValue[String]
-      case None                 => "test"
-    }
-    
+    val variableName: String = task.variable[String]("var") getOrElse "test"
 
     // simulate working
     java.lang.Thread.sleep(delay)
