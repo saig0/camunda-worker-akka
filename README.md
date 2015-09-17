@@ -48,7 +48,7 @@ object Main extends App {
   
   // start polling
   val pollActor = system.actorOf(PollActor.props(hostAddress = "http://localhost:8080/engine-rest", maxTasks = 5, waitTime= 100, lockTime = 600))
-  pollActor ! Poll(topicName = "payment", worker, variableNames = List("orderId")
+  pollActor ! Poll(topicName = "payment", worker, variableNames = List("orderId"))
   
 }
 ```
@@ -57,7 +57,7 @@ Write a worker:
 ```scala
 class PaymentWorker extends Worker {
 
-  def work(task: LockedTask): Future[Map[String, VariableValue]] = {
+  def work(task: LockedTask): Map[String, VariableValue] = {
     // resolve variables from process instance
     val orderId = task.variables.get("orderId") match {
       case Some(variableValue)  => variableValue.asValue[String]
