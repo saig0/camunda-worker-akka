@@ -61,7 +61,7 @@ class PaymentWorker extends Worker {
     // resolve variables from process instance
     val orderId = task.variables.get("orderId") match {
       case Some(variableValue)  => variableValue.asValue[String]
-      case None                 => throw IllegalArgumentException("no order id available")
+      case None                 => throw new IllegalArgumentException("no order id available")
     }
   
     // do the work
