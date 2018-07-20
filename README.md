@@ -24,12 +24,12 @@ sbt "test:runMain org.camunda.worker.akka.Main"
 
 Build the application with
 ```
-sbt assemply
+sbt assembly
 ```
 
 Deploy the application with
 ```
-sbt pulishLocal
+sbt publishLocal
 ```
 
 See example of using the akka worker in [Order Processing Microservices example](https://github.com/meyerdan/order-processing-microservices/tree/master/payment).

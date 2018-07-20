@@ -28,9 +28,11 @@ class PollActor(hostAddress: String, maxTasks: Int, lockTime: Int, waitTime: Int
 
       log.debug(s"poll tasks from server '$hostAddress' with topic '$topicName'")
       // use the name of the worker as consumerId
-      val consumerId = Worker.getNameOfActor(worker)
+      val workerId = Worker.getNameOfActor(worker)
+      val topicList = List(Topic(topicName, lockTime, variableNames))
+
       // poll tasks from server
-      val response: Future[Any] = clientActor ? PollRequest(request = PollAndLockTaskRequest(topicName, consumerId, lockTime, maxTasks, variableNames))
+      val response: Future[Any] = clientActor ? PollRequest(request = PollAndLockTaskRequest(workerId, maxTasks, topicList))
       response onComplete {
         case Success(LockedTasks(tasks))       => handleSuccessfulPollRequest(poll, tasks)
         case Success(FailedToPollTasks(cause)) => handleFailedPollRequest(poll, cause)

@@ -6,11 +6,17 @@ package org.camunda.worker.akka.client
 case class LockedTask(
     id: String,
     topicName: String,
-    lockTime: java.util.Date,
+    workerId: String,
+    errorMessage: String,
+    executionId: String,
+    lockExpirationTime: String,
     activityId: String,
     activityInstanceId: String,
     processInstanceId: String,
     processDefinitionId: String,
+    tenantId: String,
+    retries: Integer,
+    priority: Integer,
     variables: Map[String, VariableValue]) {
 
   def variable[T](name: String): Option[T] = {
