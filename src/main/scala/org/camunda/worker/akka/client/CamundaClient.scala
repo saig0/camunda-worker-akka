@@ -24,18 +24,18 @@ class CamundaClient(hostAdress: String) {
   
   val externalTaskUri = url(hostAdress) / "external-task"
   
-  def pollTasks(pollRequest: PollAndLockTaskRequest): Future[LockedTasksResponse] = {
-    val json: String = write(pollRequest)    
-    val request = jsonRequest(externalTaskUri / "poll" POST, json)
-    
-    handleRequest(request, json => 
-      parse(json).extract[LockedTasksResponse])
+  def pollTasks(pollRequest: PollAndLockTaskRequest): Future[List[LockedTask]] = {
+    val json: String = write(pollRequest)
+    val request = jsonRequest(externalTaskUri / "fetchAndLock" POST, json)
+
+    handleRequest(request, json =>
+      parse(json).extract[List[LockedTask]])
   }
   
   def taskCompleted(taskId: String, completedRequest: CompleteTaskRequest): Future[Unit] =  {
     val json: String = write(completedRequest)
     val request = jsonRequest(externalTaskUri / taskId / "complete" POST, json)
-    
+
     handleRequest(request, _ => ())
   }
   

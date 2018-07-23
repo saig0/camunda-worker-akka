@@ -21,7 +21,7 @@ trait Worker extends Actor with ActorLogging {
   def receive = {
     case task: LockedTask =>
 
-      log.debug(s"execute task '$task'")
+      log.info(s"execute task '$task'")
 
       try {
         // execute the task

@@ -22,3 +22,11 @@ project/plugins/project/
 # Scala-IDE specific
 .scala_dependencies
 .worksheet
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Mac
+.DS_Store

@@ -16,6 +16,8 @@ class SimpleWorker(delay: Int) extends Worker {
     // simulate working
     java.lang.Thread.sleep(delay)
 
+    log.info("worker is working")
+
     Map(variableName -> 123)
   }
 
